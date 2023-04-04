@@ -40,7 +40,7 @@ s3_assets_sleep=${S3_ASSETS_SLEEP:-30}
 max_retry_count=${S3_ASSETS_RETRY_COUNT:-10}
 retry_count=0
 while : ; do
-  aws s3api head-object --bucket $BUCKET --key ${ASSET_CACHE_KEY} && break
+  ${TMP_DIR}/bin/aws s3api head-object --bucket $BUCKET --key ${ASSET_CACHE_KEY} && break
   retry_count=$((retry_count+1))
   [[ ${retry_count} -le ${max_retry_count} ]] || break
   echo " Assets not found at ${ASSET_CACHE_KEY}... retrying... (${retry_count}/${max_retry_count})"
@@ -48,7 +48,7 @@ while : ; do
 done
 
 if [[ ${retry_count} -le ${max_retry_count} ]]; then
-  aws s3 cp ${ASSET_CACHE_KEY} ${TMP_DIR}/assets.tar.gz
+  ${TMP_DIR}/bin/aws s3 cp ${ASSET_CACHE_KEY} ${TMP_DIR}/assets.tar.gz
   cd $BUILD_DIR && tar xvf ${TMP_DIR}/assets.tar.gz
   # TODO: find replace for CLOUDFRONT_ENDPOINT
 else
