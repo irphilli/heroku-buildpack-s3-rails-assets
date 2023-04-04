@@ -45,11 +45,11 @@ while : ; do
   sleep ${s3_assets_sleep}
 done
 
-if [ -e "${TMP_DIR}/assets.tar.gz}" ]; then
+if [ -e "${TMP_DIR}/assets.tar.gz" ]; then
   cd $BUILD_DIR && tar xvf ${TMP_DIR}/assets.tar.gz
   # TODO: find replace for CLOUDFRONT_ENDPOINT
 else
-  echo " Assets not found at ${ASSET_CACHE_KEY}. Continuing without assets."
+  echo " Assets not found at ${asset_cache_key}. Continuing without assets."
 fi
 
 echo "-----> s3 rails assets done"
