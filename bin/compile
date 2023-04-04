@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> <env-dir>
+
+# Parameters
+BUILD_DIR=$1
+ENV_DIR=$3
+
+# Vars
+TMP_DIR=$(mktemp -d)
+#ASSET_CACHE_KEY="${S3_ASSETS_LOCATION}/assets-prod-Linux-${SOURCE_VERSION}.tar.gz"
+ASSET_CACHE_KEY="${S3_ASSETS_LOCATION}/assets-Linux-${SOURCE_VERSION}.tar.gz"
+AWS_CLI_URL="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+
+# Fail fast
+set -e
+
+export_env_dir() {
+  env_dir=$1
+  acceptlist_regex=${2:-^(AWS_ACCESS_KEY_ID|AWS_REGION|AWS_SECRET_ACCESS_KEY|CLOUDFRONT_ENDPOINT|S3_ASSETS_LOCATION|S3_ASSETS_SLEEP|S3_ASSETS_RETRY_COUNT)}
+  denylist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$acceptlist_regex" | grep -qvE "$denylist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
+export_env_dir $ENV_DIR
+
+# Download AWS CLI
+curl --silent --show-error --fail -o ${TMP_DIR}/awscliv2.zip ${AWS_CLI_URL}
+unzip -qq -d ${TMP_DIR} ${TMP_DIR}/awscliv2.zip
+${TMP_DIR}/aws/install --install-dir ${TMP_DIR}/aws-cli --bin-dir ${TMP_DIR}/bin
+${TMP_DIR}/bin/aws --version
+
+# Download and extract assets
+s3_assets_sleep=${S3_ASSETS_SLEEP:-30}
+max_retry_count=${S3_ASSETS_RETRY_COUNT:-10}
+retry_count=0
+while : ; do
+  aws s3api head-object --bucket $BUCKET --key ${ASSET_CACHE_KEY} && break
+  retry_count=$((retry_count+1))
+  [[ ${retry_count} -le ${max_retry_count} ]] || break
+  echo " Assets not found at ${ASSET_CACHE_KEY}... retrying... (${retry_count}/${max_retry_count})"
+  sleep ${s3_assets_sleep}
+done
+
+if [[ ${retry_count} -le ${max_retry_count} ]]; then
+  aws s3 cp ${ASSET_CACHE_KEY} ${TMP_DIR}/assets.tar.gz
+  cd $BUILD_DIR && tar xvf ${TMP_DIR}/assets.tar.gz
+  # TODO: find replace for CLOUDFRONT_ENDPOINT
+else
+  echo " Assets not found at ${ASSET_CACHE_KEY}. Continuing without assets."
+fi
+
+echo "-----> s3 rails assets done"
