@@ -4,12 +4,7 @@
 # Parameters
 BUILD_DIR=$1
 ENV_DIR=$3
-
-# Vars
 TMP_DIR=$(mktemp -d)
-#ASSET_CACHE_KEY="${S3_ASSETS_LOCATION}/assets-prod-Linux-${SOURCE_VERSION}.tar.gz"
-ASSET_CACHE_KEY="${S3_ASSETS_LOCATION}/assets-Linux-${SOURCE_VERSION}.tar.gz"
-AWS_CLI_URL="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
 
 # Fail fast
 set -e
@@ -34,6 +29,10 @@ curl --silent --show-error --fail -o ${TMP_DIR}/awscliv2.zip ${AWS_CLI_URL}
 unzip -qq -d ${TMP_DIR} ${TMP_DIR}/awscliv2.zip
 ${TMP_DIR}/aws/install --install-dir ${TMP_DIR}/aws-cli --bin-dir ${TMP_DIR}/bin
 ${TMP_DIR}/bin/aws --version
+
+AWS_CLI_URL="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+ASSET_CACHE_KEY="${S3_ASSETS_LOCATION}/assets-Linux-${SOURCE_VERSION}.tar.gz"
+#ASSET_CACHE_KEY="${S3_ASSETS_LOCATION}/assets-prod-Linux-${SOURCE_VERSION}.tar.gz"
 
 # Download and extract assets
 s3_assets_sleep=${S3_ASSETS_SLEEP:-30}
