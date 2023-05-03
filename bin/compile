@@ -49,6 +49,7 @@ if [ -e "${TMP_DIR}/assets.tar.gz" ]; then
   cd $BUILD_DIR && tar xvf ${TMP_DIR}/assets.tar.gz
   # find/replace for CLOUDFRONT_ENDPOINT
   if [ -n "${CLOUDFRONT_ENDPOINT}" ]; then
+    cd public/assets
     sed -i "s/\"\/packs/\"\/\/${CLOUDFRONT_ENDPOINT}\/packs/g" manifest.json
     gzip -kf manifest.json
   fi
