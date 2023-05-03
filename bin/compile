@@ -50,8 +50,10 @@ if [ -e "${TMP_DIR}/assets.tar.gz" ]; then
   # find/replace for CLOUDFRONT_ENDPOINT
   if [ -n "${CLOUDFRONT_ENDPOINT}" ]; then
     cd public/packs
-    sed -i "s/\"\/packs/\"\/\/${CLOUDFRONT_ENDPOINT}\/packs/g" manifest.json
-    gzip -kf manifest.json
+#    sed -i "s/\"\/packs/\"\/\/${CLOUDFRONT_ENDPOINT}\/packs/g" manifest.json
+#    gzip -kf manifest.json
+    # Add CLOUDFRONT_ENDPOINT where we see ="/packs/"
+    find . -name "*.js" | xargs sed -i "s/\"\/packs\/\"/\"\/\/${CLOUDFRONT_ENDPOINT}\/packs\/\"/g"
   fi
 else
   echo " Assets not found at ${asset_cache_key}. Continuing without assets."
