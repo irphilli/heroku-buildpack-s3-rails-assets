@@ -47,7 +47,9 @@ done
 
 if [ -e "${TMP_DIR}/assets.tar.gz" ]; then
   cd $BUILD_DIR && tar xvf ${TMP_DIR}/assets.tar.gz
-  # TODO: find replace for CLOUDFRONT_ENDPOINT
+  # find/replace for CLOUDFRONT_ENDPOINT
+  sed -i "s/\"\/packs/\"\/\/${CLOUDFRONT_ENDPOINT}\/packs/g" manifest.json
+  gzip -kf manifest.json
 else
   echo " Assets not found at ${asset_cache_key}. Continuing without assets."
 fi
